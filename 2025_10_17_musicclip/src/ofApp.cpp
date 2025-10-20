@@ -18,7 +18,7 @@ void ofApp::setup(){
 	}
 
 	// setup glow texture (radial alpha)
-	int texSize = 4;
+	int texSize = 128;
 	ofPixels pix;
 	pix.allocate(texSize, texSize, OF_PIXELS_RGBA);
 	for(int y=0;y<texSize;y++){
@@ -135,12 +135,53 @@ void ofApp::draw(){
 		ofDisableLighting();
 	}
 
+	// draw vaporwave grid planes as white line grids (spheres occlude them)
+	{
+		float spacing = 80.0f;
+		float depth = zMax - zMin;
+		// base line pass (depth writes enabled so lines are occluded by spheres)
+		ofPushStyle();
+		ofSetColor(255, 255, 255, 140);
+		glLineWidth(2.0f);
+		// LEFT plane (x = 0) grid in y/z
+		for(float y = 0; y <= ofGetHeight(); y += spacing){
+			ofDrawLine(glm::vec3(0.0f, y, zMin), glm::vec3(0.0f, y, zMax));
+		}
+		for(float z = zMin; z <= zMax; z += spacing){
+			ofDrawLine(glm::vec3(0.0f, 0.0f, z), glm::vec3(0.0f, ofGetHeight(), z));
+		}
+		// RIGHT plane (x = width)
+		for(float y = 0; y <= ofGetHeight(); y += spacing){
+			ofDrawLine(glm::vec3(ofGetWidth(), y, zMin), glm::vec3(ofGetWidth(), y, zMax));
+		}
+		for(float z = zMin; z <= zMax; z += spacing){
+			ofDrawLine(glm::vec3(ofGetWidth(), 0.0f, z), glm::vec3(ofGetWidth(), ofGetHeight(), z));
+		}
+		// TOP plane (y = 0) grid in x/z
+		for(float x = 0; x <= ofGetWidth(); x += spacing){
+			ofDrawLine(glm::vec3(x, 0.0f, zMin), glm::vec3(x, 0.0f, zMax));
+		}
+		for(float z = zMin; z <= zMax; z += spacing){
+			ofDrawLine(glm::vec3(0.0f, 0.0f, z), glm::vec3(ofGetWidth(), 0.0f, z));
+		}
+		// BOTTOM plane (y = height) grid in x/z
+		for(float x = 0; x <= ofGetWidth(); x += spacing){
+			ofDrawLine(glm::vec3(x, ofGetHeight(), zMin), glm::vec3(x, ofGetHeight(), zMax));
+		}
+		for(float z = zMin; z <= zMax; z += spacing){
+			ofDrawLine(glm::vec3(0.0f, ofGetHeight(), z), glm::vec3(ofGetWidth(), ofGetHeight(), z));
+		}
+		ofPopStyle();
+
+		// (removed world-space glow meshes -- will draw screen-space grid glow after 3D pass)
+	}
+
 	cam.end();
 
 	// disable depth testing for 2D billboard pass
 	ofDisableDepthTest();
 
-	// draw additive billboard glows in screen space
+	// draw additive billboard glows in screen space for spheres
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
 	for(auto &b : balls){
 		// project to screen
@@ -154,6 +195,7 @@ void ofApp::draw(){
 		ofSetColor(b.color, 200);
 		glowTex.draw(screenPos.x - size * 0.5f, screenPos.y - size * 0.5f, size, size);
 	}
+
 	ofDisableBlendMode();
 
 }
