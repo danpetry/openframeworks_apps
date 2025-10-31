@@ -82,7 +82,7 @@
 			<PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
 			<WarningLevel>Level3</WarningLevel>
-			<AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+			<AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;..\..\..\addons\ofxFastFboReader\src;..\..\..\addons\ofxFFmpegRecorder\libs;..\..\..\addons\ofxFFmpegRecorder\libs\ffmpeg;..\..\..\addons\ofxFFmpegRecorder\libs\ffmpeg\lib;..\..\..\addons\ofxFFmpegRecorder\src</AdditionalIncludeDirectories>
 			<CompileAs>CompileAsCpp</CompileAs>
 			<MultiProcessorCompilation>true</MultiProcessorCompilation>
 			<ObjectFileName>$(IntDir)\Build\%(RelativeDir)\$(Configuration)\</ObjectFileName>
@@ -127,7 +127,7 @@
 			<PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
 			<RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
 			<WarningLevel>Level3</WarningLevel>
-			<AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+			<AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;..\..\..\addons\ofxFastFboReader\src;..\..\..\addons\ofxFFmpegRecorder\libs;..\..\..\addons\ofxFFmpegRecorder\libs\ffmpeg;..\..\..\addons\ofxFFmpegRecorder\libs\ffmpeg\lib;..\..\..\addons\ofxFFmpegRecorder\src</AdditionalIncludeDirectories>
 			<CompileAs>CompileAsCpp</CompileAs>
 			<ObjectFileName>$(IntDir)\Build\%(RelativeDir)\$(Configuration)\</ObjectFileName>
 			<LanguageStandard>stdcpplatest</LanguageStandard>
@@ -228,9 +228,13 @@
 	<ItemGroup>
 		<ClCompile Include="src\main.cpp" />
 		<ClCompile Include="src\ofApp.cpp" />
+		<ClCompile Include="..\..\..\addons\ofxFastFboReader\src\ofxFastFboReader.cpp" />
+		<ClCompile Include="..\..\..\addons\ofxFFmpegRecorder\src\ofxFFmpegRecorder.cpp" />
 	</ItemGroup>
 	<ItemGroup>
 		<ClInclude Include="src\ofApp.h" />
+		<ClInclude Include="..\..\..\addons\ofxFastFboReader\src\ofxFastFboReader.h" />
+		<ClInclude Include="..\..\..\addons\ofxFFmpegRecorder\src\ofxFFmpegRecorder.h" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="$(OF_ROOT)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">

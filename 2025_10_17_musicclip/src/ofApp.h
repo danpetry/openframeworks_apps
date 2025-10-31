@@ -2,6 +2,9 @@
 
 #include "ofMain.h"
 #include <vector>
+#include "ofxFastFboReader.h"
+#include "ofxFFmpegRecorder.h"
+#include "ofVideoGrabber.h"
 
 struct Ball {
 	glm::vec3 pos;
@@ -45,4 +48,13 @@ class ofApp : public ofBaseApp{
 		ofFbo glowFbo;
 		ofTexture glowTex;
 		float glowScale = 4.0f; // multiplier of radius for glow sprite size
+
+		// rendering
+		int fboWidth = 1080;
+		int fboHeight = 1920;
+		ofFbo fboOutput;
+		ofxFastFboReader fboReader;
+		ofxFFmpegRecorder recorder;
+		bool bNewFrame = false;
+
 };

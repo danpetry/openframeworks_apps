@@ -7,15 +7,42 @@
 		<ClCompile Include="src\main.cpp">
 			<Filter>src</Filter>
 		</ClCompile>
+		<ClCompile Include="..\..\..\addons\ofxFastFboReader\src\ofxFastFboReader.cpp">
+			<Filter>addons\ofxFastFboReader\src</Filter>
+		</ClCompile>
+		<ClCompile Include="..\..\..\addons\ofxFFmpegRecorder\src\ofxFFmpegRecorder.cpp">
+			<Filter>addons\ofxFFmpegRecorder\src</Filter>
+		</ClCompile>
 	</ItemGroup>
 	<ItemGroup>
 		<Filter Include="src">
 			<UniqueIdentifier>{d8376475-7454-4a24-b08a-aac121d3ad6f}</UniqueIdentifier>
 		</Filter>
+		<Filter Include="addons">
+			<UniqueIdentifier>{84A91023--5E2-2-46-83-A-E8A-8E344F4A502A}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxFastFboReader">
+			<UniqueIdentifier>{1754CACF--1BC-9-4D-80-B-E64-DC8845F25BF9}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxFastFboReader\src">
+			<UniqueIdentifier>{A307E13B--C96-A-4D-E9-8-A2D-3D848FB8E2A8}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxFFmpegRecorder">
+			<UniqueIdentifier>{39F5E6E0--A78-B-49-5F-8-8BD-DD080859EB2D}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxFFmpegRecorder\src">
+			<UniqueIdentifier>{CDD6B294--D79-1-43-0C-8-FD5-9E718A1C2723}</UniqueIdentifier>
+		</Filter>
 	</ItemGroup>
 	<ItemGroup>
 		<ClInclude Include="src\ofApp.h">
 			<Filter>src</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\..\addons\ofxFastFboReader\src\ofxFastFboReader.h">
+			<Filter>addons\ofxFastFboReader\src</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\..\addons\ofxFFmpegRecorder\src\ofxFFmpegRecorder.h">
+			<Filter>addons\ofxFFmpegRecorder\src</Filter>
 		</ClInclude>
 	</ItemGroup>
 	<ItemGroup>

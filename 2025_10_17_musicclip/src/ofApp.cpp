@@ -3,13 +3,43 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	ofSetBackgroundColor(ofColor::black);
+
+	// Setup video grabber, frame buffer and recorder
+	fboOutput.allocate(fboWidth, fboHeight, GL_RGBA);
+	recorder.setup(true, false, glm::vec2(fboWidth, fboHeight));
+	recorder.setOverWrite(true);
+	recorder.setInputPixelFormat(OF_IMAGE_COLOR);
+	
+	// Improve output quality:
+	// - Use modern H.264 encoder (libx264) instead of legacy mpeg4
+	// - Use CRF-based quality control (good quality around 18) and a reasonable preset
+	// - Ensure output pixel format is yuv420p which is widely compatible
+	// - Optionally bump target bitrate if you prefer a constant bitrate
+	recorder.setVideoCodec("libx264");
+	// Option A: CRF (recommended) - better quality/size tradeoff
+	recorder.addAdditionalOutputArgument("-preset veryfast");
+	recorder.addAdditionalOutputArgument("-crf 18");
+	recorder.addAdditionalOutputArgument("-pix_fmt yuv420p");
+
+	// Option B: Constant bitrate (uncomment if you prefer a fixed bitrate)
+	// recorder.setBitRate(8000); // 8000 kb/s
+	// recorder.addAdditionalOutputArgument("-b:v 8000k");
+	// recorder.addAdditionalOutputArgument("-pix_fmt yuv420p");
+
+	// start the recorder after configuring it
+	// comment/uncomment to toggle recording.
+	// There's a better pattern where you can start/stop recording via keypress in the example,
+	// but I've spent enough time on this already
+	recorder.setOutputPath(ofToDataPath(ofGetTimestampString() + ".mp4", true));
+	recorder.startCustomRecord();
+
 	srand((unsigned)time(nullptr));
 	balls.clear();
 	for(int i=0;i<NUM_BALLS;i++){
 		Ball b;
 		b.radius = ofRandom(25, 75);
 		b.pos = glm::vec3(ofRandom(b.radius, ofGetWidth()-b.radius), ofRandom(b.radius, ofGetHeight()-b.radius), ofRandom(zMin+ b.radius, zMax - b.radius));
-		float speed = ofRandom(200, 500);
+		float speed = ofRandom(100, 300);
 		float angle = ofRandom(0, TWO_PI);
 		float zangle = ofRandom(-1,1);
 		b.vel = glm::vec3(cos(angle), sin(angle), zangle) * speed;
@@ -50,12 +80,18 @@ void ofApp::setup(){
 	cam.setFarClip(2000.0f);
 	// position the camera so that world x/y coordinates align with window coordinates
 	// this makes collisions against ofGetWidth()/ofGetHeight() correct
-	cam.setPosition(ofGetWidth() / 2.0f, ofGetHeight() / 2.0f, 800.0f);
+	cam.setPosition(ofGetWidth()*2.33, ofGetHeight() / 2.33f, 565.0f);
 	cam.lookAt(glm::vec3(ofGetWidth() / 2.0f, ofGetHeight() / 2.0f, 0.0f));
+
+	recorder.setOutputPath(ofToDataPath(ofGetTimestampString() + ".mp4", true));
+	recorder.startCustomRecord();
+
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+
+
 	float dt = ofGetLastFrameTime();
 	// update positions
 	for(auto &b : balls){
@@ -90,7 +126,7 @@ void ofApp::update(){
 				float velAlongNormal = glm::dot(relVel, n);
 				if(velAlongNormal > 0) continue; // they are separating
 				// compute restitution (elastic)
-				float e = 0.9f;
+				float e = 0.95f;
 				float m1 = a.mass();
 				float m2 = b.mass();
 				float j = -(1 + e) * velAlongNormal / (1.0f/m1 + 1.0f/m2);
@@ -107,10 +143,13 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 	// clear color and depth buffers each frame and enable depth testing
+	fboOutput.begin();
 	ofClear(0, 0, 0, 255);
 	ofEnableDepthTest();
 
 	cam.begin();
+
+	float renderScale = (float)ofGetWidth() / fboOutput.getWidth();
 
 	// enable lighting so bounding planes are affected by it
 	if(lightOn) {
@@ -141,8 +180,8 @@ void ofApp::draw(){
 		float depth = zMax - zMin;
 		// base line pass (depth writes enabled so lines are occluded by spheres)
 		ofPushStyle();
-		ofSetColor(255, 255, 255, 140);
-		glLineWidth(2.0f);
+		ofSetColor(255, 255, 255, 200);
+		glLineWidth(5.0f);
 		// LEFT plane (x = 0) grid in y/z
 		for(float y = 0; y <= ofGetHeight(); y += spacing){
 			ofDrawLine(glm::vec3(0.0f, y, zMin), glm::vec3(0.0f, y, zMax));
@@ -187,7 +226,7 @@ void ofApp::draw(){
 		// project to screen
 		auto screenPos = cam.worldToScreen(b.pos);
 		// simple off-screen cull
-		if(screenPos.x < -200 || screenPos.x > ofGetWidth() + 200 || screenPos.y < -200 || screenPos.y > ofGetHeight() + 200) continue;
+		//if(screenPos.x < -200 || screenPos.x > ofGetWidth() + 200 || screenPos.y < -200 || screenPos.y > ofGetHeight() + 200) continue;
 		// approximate screen radius by projecting a point at +radius on x axis
 		auto screenEdge = cam.worldToScreen(b.pos + glm::vec3(b.radius, 0.0f, 0.0f));
 		float screenR = glm::distance(glm::vec2(screenEdge.x, screenEdge.y), glm::vec2(screenPos.x, screenPos.y));
@@ -197,6 +236,19 @@ void ofApp::draw(){
 	}
 
 	ofDisableBlendMode();
+
+	fboOutput.end();
+
+	float scale = ofGetHeight() / 1920.0;
+	fboOutput.draw(0, 0, 1080 * scale, 1920 * scale);
+
+	ofPixels px;
+
+	// ofxFastFboReader used to speed this up
+	fboReader.readToPixels(fboOutput, px, OF_IMAGE_COLOR);
+	if (px.getWidth() > 0 && px.getHeight() > 0) {
+		recorder.addFrame(px);
+	}
 
 }
 
