@@ -35,7 +35,7 @@ class ofApp : public ofBaseApp{
 		
 		// simple ball simulation in 3D
 		std::vector<Ball> balls;
-		const int NUM_BALLS = 15;
+		const int NUM_BALLS = 20;
 
 		// 3D rendering / lighting
 		ofLight light;
@@ -47,7 +47,7 @@ class ofApp : public ofBaseApp{
 		// glow/billboard resources
 		ofFbo glowFbo;
 		ofTexture glowTex;
-		float glowScale = 4.0f; // multiplier of radius for glow sprite size
+		float glowScale = 12.0f; // multiplier of radius for glow sprite size
 
 		// rendering
 		int fboWidth = 1080;

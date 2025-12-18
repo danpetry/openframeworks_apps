@@ -37,9 +37,9 @@ void ofApp::setup(){
 	balls.clear();
 	for(int i=0;i<NUM_BALLS;i++){
 		Ball b;
-		b.radius = ofRandom(25, 75);
+		b.radius = ofRandom(20, 45);
 		b.pos = glm::vec3(ofRandom(b.radius, ofGetWidth()-b.radius), ofRandom(b.radius, ofGetHeight()-b.radius), ofRandom(zMin+ b.radius, zMax - b.radius));
-		float speed = ofRandom(100, 300);
+		float speed = ofRandom(200, 400);
 		float angle = ofRandom(0, TWO_PI);
 		float zangle = ofRandom(-1,1);
 		b.vel = glm::vec3(cos(angle), sin(angle), zangle) * speed;
