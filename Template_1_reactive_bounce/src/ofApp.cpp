@@ -3,14 +3,21 @@
 //--------------------------------------------------------------
 void ofApp::setup(){
 	ofSetBackgroundColor(ofColor::black);
+	ofEnableAlphaBlending(); // needed for the trail-fade overlay in draw() below
 
 	// Set up audio stream
 	ofSetLogLevel(OF_LOG_VERBOSE);
 	int bufferSize = 512;
 	ofSoundStreamSettings streamSettings;
+	// Pin the API instead of leaving it unspecified: with no API set, RtAudio
+	// probes every installed driver (ASIO/WASAPI/DS) to find one that works,
+	// which on this machine wakes third-party ASIO-hooked apps (e.g.
+	// Sonarworks) as a side effect. WASAPI is the standard low-latency
+	// Windows default and skips ASIO device enumeration entirely.
+	streamSettings.setApi(ofSoundDevice::MS_WASAPI);
 	streamSettings.numInputChannels = 2;
 	streamSettings.numOutputChannels = 2;
-	streamSettings.sampleRate = 44100;
+	streamSettings.sampleRate = static_cast<size_t>(sampleRate);
 	streamSettings.bufferSize = bufferSize;
 	streamSettings.numBuffers = 4;
 	stream.setup(streamSettings);
@@ -24,8 +31,29 @@ void ofApp::setup(){
 	}
 	player.connectTo(fft).connectTo(output);
 
+	// Band extraction: one smoothed 0..1 value per band, for draw() to react to.
+	bands.assign(numBands, 0.0f);
+	bandMin.assign(numBands, 1.0f);
+	bandMax.assign(numBands, 0.0f);
+
 	// Setup video grabber, frame buffer and recorder
 	fboOutput.allocate(fboWidth, fboHeight, GL_RGBA);
+	// allocate the "previous frame" FBO for feedback/ping-pong
+	lastFboOutput.allocate(fboWidth, fboHeight, GL_RGBA);
+	// avoid edge sampling artifacts on both FBOs used in the ping-pong
+	for (ofFbo* fbo : { &fboOutput, &lastFboOutput }) {
+		fbo->getTexture().setTextureWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+		fbo->getTexture().setTextureMinMagFilter(GL_NEAREST, GL_NEAREST);
+	}
+
+	// Clear lastFboOutput so the very first frame's ping-pong read (in draw())
+	// doesn't show garbage; fboOutput itself doesn't need pre-clearing since
+	// draw() unconditionally opaque-fills it before anything else, every frame.
+	ofFloatColor bg = ofGetBackgroundColor();
+	lastFboOutput.begin();
+	ofClear(bg.r, bg.g, bg.b, bg.a);
+	lastFboOutput.end();
+
 	recorder.setup(true, false, glm::vec2(fboWidth, fboHeight));
 	recorder.setOverWrite(true);
 	recorder.setInputPixelFormat(OF_IMAGE_COLOR);
@@ -53,42 +81,83 @@ void ofApp::setup(){
 	recorder.setOutputPath(ofToDataPath(ofGetTimestampString() + ".mp4", true));
 	recorder.startCustomRecord();
 
-
 	// Other setup code can go here...
-
-
-	recorder.setOutputPath(ofToDataPath(ofGetTimestampString() + ".mp4", true));
-	recorder.startCustomRecord();
-	ofBackground(0);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	fft.updateBands(bands, sampleRate, freqMin, dbMin, dbMax, bandSmoothing);
 
+	// Track each band's observed range and periodically print it, so you
+	// know the actual dynamic range of this sample before designing around it.
+	for (int i = 0; i < numBands; ++i) {
+		bandMin[i] = std::min(bandMin[i], bands[i]);
+		bandMax[i] = std::max(bandMax[i], bands[i]);
+	}
+
+	if (ofGetElapsedTimef() - lastStatsLogTime > statsLogInterval) {
+		lastStatsLogTime = ofGetElapsedTimef();
+		std::stringstream ss;
+		for (int i = 0; i < numBands; ++i) {
+			ss << i << ":[" << ofToString(bandMin[i], 2) << "-" << ofToString(bandMax[i], 2) << "] ";
+		}
+		ofLogNotice("bands") << ss.str();
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
 
+	// Begin rendering into the "current" FBO
 	fboOutput.begin();
 
-	// Drawing code can go here...
-	ofBackground(0);
-	fft.draw(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2));
+	// Opaque fill first: lastFboOutput may have partial alpha (from the fade
+	// overlay below), so this avoids stale/garbage pixels showing through.
+	ofFloatColor bg = ofGetBackgroundColor();
+	ofSetColor(bg);
+	ofDrawRectangle(0, 0, fboWidth, fboHeight);
 
+	// Draw the previous frame back in...
+	ofSetColor(255);
+	lastFboOutput.draw(0, 0, fboWidth, fboHeight);
+
+	// ...then fade it slightly with a translucent background-colored overlay,
+	// so trails decay over time instead of accumulating forever.
+	bg.a = trailFadeAlpha;
+	ofSetColor(bg);
+	ofDrawRectangle(0, 0, fboWidth, fboHeight);
+	ofSetColor(255); // reset to opaque white for your drawing code below
+
+	// --- Your sketch goes here. ---------------------------------------------
+	// This bar chart is a minimal prototype -- read bands[] and draw something
+	// with it, however simple -- not a final look. Replace it once you know
+	// (from the console log in update()) what this sample's values actually do.
+	// `bands[i]` is a smoothed 0..1 amplitude for frequency band i (low -> high).
+	for (int i = 0; i < numBands; i++) {
+		float barWidth = (float)fboWidth / numBands;
+		float barHeight = bands[i] * fboHeight;
+		ofSetColor(255 * bands[i]);
+		ofDrawRectangle(i * barWidth, fboHeight - barHeight, barWidth, barHeight);
+	}
+	// -------------------------------------------------------------------------
+
+	// Finish drawing into current FBO
 	fboOutput.end();
 
-	float scale = ofGetHeight() / 1920.0;
-	fboOutput.draw(0, 0, 1080 * scale, 1920 * scale);
+	// Present, scaled to fit the window, without upscaling past native FBO size.
+	float scale = std::min(1.0f, ofGetHeight() / (float)fboHeight);
+	fboOutput.draw(0, 0, fboWidth * scale, fboHeight * scale);
 
-	ofPixels px;
-
-	// ofxFastFboReader used to speed this up
-	fboReader.readToPixels(fboOutput, px, OF_IMAGE_COLOR);
-	if (px.getWidth() > 0 && px.getHeight() > 0) {
-		recorder.addFrame(px);
+	// ofxFastFboReader used to speed this up; recordPixels is a persistent
+	// buffer reused every frame instead of reallocating.
+	fboReader.readToPixels(fboOutput, recordPixels, OF_IMAGE_COLOR);
+	if (recordPixels.getWidth() > 0 && recordPixels.getHeight() > 0) {
+		recorder.addFrame(recordPixels);
 	}
 
+	// Ping-pong: make the just-rendered FBO become "last" for the next frame
+	// and reuse the other FBO as the render target next frame.
+	std::swap(fboOutput, lastFboOutput);
 }
 
 //--------------------------------------------------------------

@@ -11,6 +11,11 @@ public:
     void process(ofSoundBuffer &input, ofSoundBuffer &output);
     void draw(const ofRectangle & r, bool bDrawLogScale = true);
 
+    // Samples FFT amplitude on a log-frequency axis and smooths it into
+    // `bands` (updated in place; its size determines the number of bands).
+    // No-op until audio has actually been processed.
+    void updateBands(std::vector<float>& bands, float sampleRate, float freqMin, float dbMin, float dbMax, float smoothing);
+
     unsigned int bufferSize;
 
     void setBins(int numChans);

@@ -76,6 +76,31 @@ void FftObject::plot(vector<float>& buffer, const ofRectangle &r, bool bDrawLogS
     ofPopStyle();
 }
 //--------------------------------------------------------------
+void FftObject::updateBands(std::vector<float>& bands, float sampleRate, float freqMin, float dbMin, float dbMax, float smoothing) {
+    if (!bIsProcessed || bands.empty()) return;
+
+    int numBands = (int)bands.size();
+    const float freqMax = sampleRate * 0.5f; // Nyquist
+    const float logMin = std::log(freqMin);
+    const float logMax = std::log(freqMax);
+
+    for (int band = 0; band < numBands; ++band) {
+        // geometric (log) center frequency for this band
+        float frac = (band + 0.5f) / (float)numBands;
+        float fCenter = std::exp(logMin + frac * (logMax - logMin));
+
+        // sample amplitude from ofxFft via helper (interpolated)
+        float amp = fft->getAmplitudeAtFrequency(fCenter, sampleRate);
+
+        // convert to dB (amplitude -> dB), clamp and remap to 0..1
+        amp = std::max(amp, 1e-9f); // avoid log(0)
+        float db = 20.0f * std::log10(amp);
+        float mapped = ofClamp((db - dbMin) / (dbMax - dbMin), 0.0f, 1.0f);
+
+        bands[band] = ofLerp(bands[band], mapped, smoothing);
+    }
+}
+//--------------------------------------------------------------
 void FftObject::process(ofSoundBuffer &input, ofSoundBuffer &output) {
     
     input.copyTo(output);//this sound object does not process sound so it will passthrough.
