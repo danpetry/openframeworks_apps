@@ -36,6 +36,7 @@ class ofApp : public ofBaseApp{
 		int fboWidth = 1080;
 		int fboHeight = 1920;
 		ofFbo fboOutput;
+		ofFbo lastFboOutput;
 		ofxFastFboReader fboReader;
 		ofxFFmpegRecorder recorder;
 		FftObject fft;

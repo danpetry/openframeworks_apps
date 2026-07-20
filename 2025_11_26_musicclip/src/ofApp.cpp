@@ -2,7 +2,16 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-	ofSetBackgroundColor(ofColor::black);
+	ofColor bgColor;
+
+	// Default: pure black (unchanged)
+	//bgColor.setHsb(0, 0, 0);
+	//bgColor.setHsb(140, 201, 33); // Deep teal charcoal
+	bgColor.setHsb(184, 222, 38); // Dark indigo / night
+	//bgColor.setHsb(160, 30, 21);	// Neutral charcoal (very dark desaturated)
+	// bgColor.setHsb(150, 20, 18);	// Slightly warmed black
+	ofSetBackgroundColor(bgColor);
+	ofEnableAlphaBlending(); // enable once
 
 	// Set up audio stream
 	ofSetLogLevel(OF_LOG_VERBOSE);
@@ -31,6 +40,24 @@ void ofApp::setup(){
 
 	// Setup video grabber, frame buffer and recorder
 	fboOutput.allocate(fboWidth, fboHeight, GL_RGBA);
+	// allocate the "previous frame" FBO for feedback/ping-pong
+	lastFboOutput.allocate(fboWidth, fboHeight, GL_RGBA);
+	// avoid edge sampling/alpha artifacts. Do this by clearing and sampling the FBOs consistently and setting texture wrap/filtering.
+	fboOutput.getTexture().setTextureWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+	lastFboOutput.getTexture().setTextureWrap(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+	fboOutput.getTexture().setTextureMinMagFilter(GL_NEAREST, GL_NEAREST);
+	lastFboOutput.getTexture().setTextureMinMagFilter(GL_NEAREST, GL_NEAREST);
+
+	// clear both fbos to the background color to avoid garbage on first frames
+	ofFloatColor bg = ofGetBackgroundColor();
+	fboOutput.begin();
+	ofClear(bg.r, bg.g, bg.b, bg.a);
+	fboOutput.end();
+
+	lastFboOutput.begin();
+	ofClear(bg.r, bg.g, bg.b, bg.a);
+	lastFboOutput.end();
+
 	recorder.setup(true, false, glm::vec2(fboWidth, fboHeight));
 	recorder.setOverWrite(true);
 	recorder.setInputPixelFormat(OF_IMAGE_COLOR);
@@ -64,13 +91,13 @@ void ofApp::setup(){
 
 	recorder.setOutputPath(ofToDataPath(ofGetTimestampString() + ".mp4", true));
 	recorder.startCustomRecord();
-	ofBackground(0);
+	//ofBackground(0);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
 	// Use ofxFft helpers to sample amplitude on a log-frequency axis
-	float smoothing = 0.1f; // 0 = no smoothing, 1 = instant
+	float smoothing = 0.5f; // 0 = no smoothing, 1 = instant
 	int numChannels = (int)fft.audioBins.size();
 	if (numChannels == 0) return;
 
@@ -109,11 +136,35 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 
+	// Feedback/fade settings:
+	// feedbackAmount: how much of the previous frame is drawn on top of itself (0..1)
+	// - 1.0 -> previous frame fully opaque (very long trails)
+	// - 0.0 -> previous frame not drawn at all (no feedback)
+	// tweak this value to taste
+	//const float feedbackAmount = 0.95;
+
+	// Begin rendering into the "current" FBO
 	fboOutput.begin();
 
-	// Drawing code can go here...
-	ofBackground(0);
-	//fft.draw(ofRectangle(0, ofGetHeight() / 2, ofGetWidth(), ofGetHeight() / 2));
+	ofFloatColor bg = ofGetBackgroundColor();
+	ofSetColor(bg);
+	ofDrawRectangle(0, 0, fboWidth, fboHeight);
+
+	// Draw the previous frame into the current FBO with an alpha to create fading trails.
+	//int alpha255 = (int)ofClamp(feedbackAmount * 255.0f, 0.0f, 255.0f);
+	//ofSetColor(255, 255, 255, alpha255);
+	ofSetColor(255);
+	lastFboOutput.draw(0, 0, fboWidth, fboHeight);
+
+	//// draw translucent background-colored overlay using ofFloatColor
+	const float overlayAlpha = 0.0135f; // small per-frame fade (tweak 0.02..0.08)
+	//ofFloatColor bg = ofGetBackgroundColor();
+	bg.a = overlayAlpha;
+	ofSetColor(bg);
+	ofDrawRectangle(0, 0, fboWidth, fboHeight);
+	ofSetColor(255); // reset color to opaque white for subsequent draws
+
+	// Now draw the current frame content on top of the feedback
 	float pulseAmt = 0.1f;
 
 	for (int i = 0; i < horizDivs; i++) {
@@ -131,7 +182,21 @@ void ofApp::draw(){
 			float h = ofMap(binValue, 0, 1, pulseAmt * fboWidth / horizDivs, fboHeight / vertDivs);
 			//cout << "binIndex: " << binIndex << endl;
 			//cout << fft.audioBins[0][binIndex] << endl;
-			color.setHsb(255 * binValue, 200, 255);
+
+			// MOODY / SINISTER PALETTE MAPPING
+			// Hue: bias towards teal -> deep purple (roughly 150..235 in 0..255 space)
+			// Add small positional offset for variety
+			float baseHue = ofMap(binValue, 0.0f, 1.0f, 150.0f, 235.0f);
+			float hueOffset = ((float)i / std::max(1, horizDivs) - 0.5f) * 24.0f + ((float)j / std::max(1, vertDivs) - 0.5f) * -12.0f;
+			float hue = ofClamp(baseHue + hueOffset, 0.0f, 255.0f);
+			// Saturation: mid-high but not full, so colors feel rich but not garish
+			float saturation = ofClamp(ofMap(binValue, 0.0f, 1.0f, 90.0f, 210.0f), 0.0f, 255.0f);
+			// Brightness: keep generally dark for moody feel, peaks brighten more
+			float brightness = ofClamp(ofMap(binValue, 0.0f, 1.0f, 80.0f, 190.0f), 0.0f, 255.0f);
+			// Alpha: low-energy cells are more transparent, peaks stronger
+			float alpha = ofClamp(ofMap(binValue, 0.0f, 1.0f, 150.0f, 240.0f), 0.0f, 255.0f);
+			color.setHsb(hue, saturation, brightness, alpha);
+
 			ofSetColor(color);
 			float xroom = (fboWidth / horizDivs - w) / 2.0f;
 			float yroom = (fboHeight / vertDivs - h) / 2.0f;
@@ -141,10 +206,19 @@ void ofApp::draw(){
 		}
 	}
 
+	// Finish drawing into current FBO
 	fboOutput.end();
 
-	float scale = ofGetHeight() / 1920.0;
-	fboOutput.draw(0, 0, 1080 * scale, 1920 * scale);
+	// Present and record the freshly rendered frame (before swapping)
+	// Restore original scale behaviour: scale by window height relative to 1920,
+	// but do not upscale beyond native FBO size.
+	float scale = ofGetHeight() / 1920.0f;
+	scale = std::min(1.0f, scale);
+	float drawW = fboWidth * scale;
+	float drawH = fboHeight * scale;
+	float drawX = 0.0f;
+	float drawY = 0.0f;
+	fboOutput.draw(drawX, drawY, drawW, drawH);
 
 	ofPixels px;
 	// ofxFastFboReader used to speed this up
@@ -153,6 +227,9 @@ void ofApp::draw(){
 		recorder.addFrame(px);
 	}
 
+	// Ping-pong: make the just-rendered FBO become "last" for the next frame
+	// and reuse the other FBO as the render target next frame.
+	std::swap(fboOutput, lastFboOutput);
 }
 
 //--------------------------------------------------------------
