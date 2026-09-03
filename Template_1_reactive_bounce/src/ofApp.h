@@ -16,6 +16,11 @@ class ofApp : public ofBaseApp{
 		void exit();
 
 		void keyPressed(int key);
+		// Grows/shrinks bands (and its sibling per-band vectors) in place,
+		// clamped to [numBandsMin, numBandsMax]. Existing per-band state
+		// (smoothing history, min/max, enabled flags) is preserved for
+		// indices that still exist after the resize.
+		void setNumBands(int n);
 		void keyReleased(int key);
 		void mouseMoved(int x, int y );
 		void mouseDragged(int x, int y, int button);
@@ -69,7 +74,15 @@ class ofApp : public ofBaseApp{
 		// Band extraction: FFT amplitude is sampled on a log-frequency axis and
 		// smoothed into `bands`, a 0..1 value per band (low freq -> high freq),
 		// for draw() (or a derived sketch) to react to.
+		// '=' / '-' grow/shrink numBands at runtime (see setNumBands()), clamped
+		// to this range: below numBandsMin the log-frequency spacing gets silly,
+		// above numBandsMax neighboring bands start reading almost the same FFT
+		// bin (diminishing returns) and, in sketches whose draw() cost scales
+		// with numBands (e.g. a numBands x numBands loop), frame cost can climb
+		// fast -- keep that in mind before raising this ceiling per-sketch.
 		int numBands = 20;
+		int numBandsMin = 2;
+		int numBandsMax = 64;
 		float sampleRate = 44100.0f;
 		float freqMin = 20.0f;			// Hz; freqMax is derived as sampleRate/2 (Nyquist)
 		// Attack/release smoothing: fast response when a band rises (attack) so
@@ -81,6 +94,13 @@ class ofApp : public ofBaseApp{
 		float dbMin = -90.0f;
 		float dbMax = 0.0f;
 		std::vector<float> bands;
+
+		// Per-band on/off mask: disabled bands are forced to 0 in update()
+		// (before anything reads bands[]), so a muted band reads as silence
+		// everywhere -- the bar chart, the stats overlay, and any derived
+		// sketch. Left/Right move `selectedBand`, Space toggles it.
+		std::vector<bool> bandEnabled;
+		int selectedBand = 0;
 
 		// Diagnostics: running per-band min/max, logged to console periodically.
 		// Doubles as a smoke test (nothing moving means the audio pipeline is

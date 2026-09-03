@@ -62,6 +62,7 @@ void ofApp::setup(){
 	bands.assign(numBands, 0.0f);
 	bandMin.assign(numBands, 1.0f);
 	bandMax.assign(numBands, 0.0f);
+	bandEnabled.assign(numBands, true);
 
 	// Setup video grabber, frame buffer and recorder
 	fboOutput.allocate(fboWidth, fboHeight, GL_RGBA);
@@ -123,6 +124,14 @@ void ofApp::update(){
 
 	fft.updateBands(bands, sampleRate, freqMin, dbMin, dbMax, bandAttack, bandRelease);
 
+	// Force disabled bands to silence here, before anything downstream (bar
+	// chart, stats overlay, a derived sketch) reads bands[]. This also means
+	// a disabled band's attack/release state resets to 0, so re-enabling it
+	// fades back in via `bandAttack` rather than resuming its old value.
+	for (int i = 0; i < numBands; ++i) {
+		if (!bandEnabled[i]) bands[i] = 0.0f;
+	}
+
 	// Track each band's observed range and periodically print it, so you
 	// know the actual dynamic range of this sample before designing around it.
 	for (int i = 0; i < numBands; ++i) {
@@ -183,14 +192,14 @@ void ofApp::draw(){
 	float scale = std::min(1.0f, ofGetHeight() / (float)fboHeight);
 	fboOutput.draw(0, 0, fboWidth * scale, fboHeight * scale);
 
-	// Debug overlay: current per-band max, drawn straight to the window (not
-	// into fboOutput above), so it's live on screen but never in a recording.
+	// Debug overlay: band-count/selection controls, drawn straight to the
+	// window (not into fboOutput above), so it's live on screen but never in
+	// a recording.
 	if (bShowStatsOverlay) {
 		std::stringstream ss;
-		ss << "band max:\n";
-		for (int i = 0; i < numBands; ++i) {
-			ss << i << ": " << ofToString(bandMax[i], 2) << "\n";
-		}
+		ss << "numBands: " << numBands << "  ('=' / '-' to change)\n";
+		ss << "selected band: " << selectedBand << (bandEnabled[selectedBand] ? " [on]" : " [off]")
+		   << "  (Left/Right to move, Space to toggle)\n";
 		ofSetColor(255);
 		ofDrawBitmapStringHighlight(ss.str(), 12, 20);
 	}
@@ -221,8 +230,34 @@ void ofApp::exit(){
 }
 
 //--------------------------------------------------------------
+void ofApp::setNumBands(int n) {
+	n = ofClamp(n, numBandsMin, numBandsMax);
+	if (n == numBands) return;
+
+	// resize() keeps existing values for indices that still exist and
+	// fills any newly-added ones with the given default.
+	bands.resize(n, 0.0f);
+	bandMin.resize(n, 1.0f);
+	bandMax.resize(n, 0.0f);
+	bandEnabled.resize(n, true);
+
+	numBands = n;
+	selectedBand = ofClamp(selectedBand, 0, numBands - 1);
+}
+
+//--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-	if (key == OF_KEY_ESC) {
+	if (key == '=' || key == '+') {
+		setNumBands(numBands + 1);
+	} else if (key == '-' || key == '_') {
+		setNumBands(numBands - 1);
+	} else if (key == OF_KEY_LEFT) {
+		selectedBand = (selectedBand - 1 + numBands) % numBands;
+	} else if (key == OF_KEY_RIGHT) {
+		selectedBand = (selectedBand + 1) % numBands;
+	} else if (key == ' ') {
+		bandEnabled[selectedBand] = !bandEnabled[selectedBand];
+	} else if (key == OF_KEY_ESC) {
 		// Closing the GL window's own close button routes through
 		// ofApp::exit() and then C++ destructors for player/fft/output,
 		// which crashes on exit -- root cause not fully pinned down (the
