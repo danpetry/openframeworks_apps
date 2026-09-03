@@ -44,7 +44,7 @@ class ofApp : public ofBaseApp{
 		// the choice (in bin/data/lastAudioFile.txt). If false, skips the
 		// dialog and reloads whichever file was last picked -- falls back to
 		// the dialog once if nothing's been remembered yet.
-		bool bShowFilePicker = true;
+		bool bShowFilePicker = false;
 
 		// rendering
 		int fboWidth = 1080;
@@ -76,8 +76,8 @@ class ofApp : public ofBaseApp{
 		// hits stay snappy, slow decay when it falls (release) so the motion
 		// reads as smooth instead of jittery -- see FftObject::updateBands.
 		// 0 = frozen, 1 = instant.
-		float bandAttack = 0.6f;
-		float bandRelease = 0.08f;
+		float bandAttack = 1.0f;
+		float bandRelease = 0.01f;
 		float dbMin = -90.0f;
 		float dbMax = 0.0f;
 		std::vector<float> bands;
@@ -98,5 +98,5 @@ class ofApp : public ofBaseApp{
 		// Feedback/trail: fraction of background color re-drawn over the previous
 		// frame each draw() call. 0 = trails never fade (garbage/full feedback),
 		// higher = trails fade faster / are shorter. Tune to taste.
-		float trailFadeAlpha = 0.02f;
+		float trailFadeAlpha = 1.00f;
 };

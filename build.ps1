@@ -43,6 +43,12 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+# Accept a path-like -Project (e.g. tab-completed ".\Template_1_reactive_bounce\")
+# and normalize it to the bare folder name the rest of the script expects.
+if ($Project) {
+    $Project = Split-Path -Leaf ($Project.TrimEnd('\', '/'))
+}
+
 function Get-Projects {
     Get-ChildItem -Path $repoRoot -Directory | Where-Object {
         Get-ChildItem -Path $_.FullName -Filter '*.sln' -File -ErrorAction SilentlyContinue |
