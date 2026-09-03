@@ -1,0 +1,6 @@
+ofxAudioFile
+ofxFastFboReader
+ofxFFmpegRecorder
+ofxFft
+ofxGui
+ofxSoundObjects

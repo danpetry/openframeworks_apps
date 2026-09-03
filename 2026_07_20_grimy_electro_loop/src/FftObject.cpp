@@ -1,0 +1,132 @@
+#include "FftObject.h"
+//--------------------------------------------------------------
+void FftObject::setup(unsigned int bufferSize) {
+    this->bufferSize = bufferSize;
+    
+	
+    fft = shared_ptr<ofxFft>(ofxFft::create(bufferSize, OF_FFT_WINDOW_HAMMING));
+    
+    numChannels = 0;
+    bIsProcessed = false;
+    setBins(2);
+}
+//--------------------------------------------------------------
+
+void FftObject::setBins(int numChans){
+    if (numChans < numChannels) {
+        drawBins.resize(numChans);
+        middleBins.resize(numChans);
+        audioBins.resize(numChans);
+    }else if (numChans > numChannels){
+        for (int i = numChannels; i < numChans; i++) {
+            vector<float> db, mb, ab;
+            db.resize(fft->getBinSize());
+            mb.resize(fft->getBinSize());
+            ab.resize(fft->getBinSize());
+            drawBins.push_back(db);
+            middleBins.push_back(mb);
+            audioBins.push_back(ab);
+        }
+    }
+    numChannels = numChans;
+}
+//--------------------------------------------------------------
+void FftObject::draw(const ofRectangle & r, bool bDrawLogScale) {
+    if (bIsProcessed) {
+        
+        soundMutex.lock();
+        drawBins = middleBins;
+        soundMutex.unlock();
+        
+        ofSetColor(255);
+        ofRectangle rs;
+        float h = r.height/numChannels;
+        
+        for (int i =0; i < numChannels; i++) {
+            rs.set(0,h*i+r.y,r.width, h);
+            rs.scaleFromCenter(0.95);
+            plot(drawBins[i],rs, bDrawLogScale);
+        }
+    }
+}
+//--------------------------------------------------------------
+void FftObject::plot(vector<float>& buffer, const ofRectangle &r, bool bDrawLogScale) {
+    ofMesh m;
+    m.clear();
+    m.setMode(OF_PRIMITIVE_LINE_STRIP);
+
+    int n = buffer.size();
+    float offset = r.getMaxY();
+    float xinc = r.width/n;
+    for (int i = 0; i < n; i++) {
+        if (bDrawLogScale) {
+            ofVec3f v;
+            v.x = ofMap(log10(i+1), 0, log10(n), r.x, r.getMaxX());
+            v.y = ofMap(log10(buffer[i]+1), 0, log10(2), offset, r.y);
+            m.addVertex(v);
+        }else{
+            m.addVertex(ofVec3f(i*xinc+r.x, offset - buffer[i]*r.height ));
+        }
+        m.addColor(ofFloatColor::red);
+    }
+    ofPushStyle();
+    m.draw();
+    ofNoFill();
+    ofDrawRectangle(r);
+    ofPopStyle();
+}
+//--------------------------------------------------------------
+void FftObject::updateBands(std::vector<float>& bands, float sampleRate, float freqMin, float dbMin, float dbMax, float smoothing) {
+    if (!bIsProcessed || bands.empty()) return;
+
+    int numBands = (int)bands.size();
+    const float freqMax = sampleRate * 0.5f; // Nyquist
+    const float logMin = std::log(freqMin);
+    const float logMax = std::log(freqMax);
+
+    for (int band = 0; band < numBands; ++band) {
+        // geometric (log) center frequency for this band
+        float frac = (band + 0.5f) / (float)numBands;
+        float fCenter = std::exp(logMin + frac * (logMax - logMin));
+
+        // sample amplitude from ofxFft via helper (interpolated)
+        float amp = fft->getAmplitudeAtFrequency(fCenter, sampleRate);
+
+        // convert to dB (amplitude -> dB), clamp and remap to 0..1
+        amp = std::max(amp, 1e-9f); // avoid log(0)
+        float db = 20.0f * std::log10(amp);
+        float mapped = ofClamp((db - dbMin) / (dbMax - dbMin), 0.0f, 1.0f);
+
+        bands[band] = ofLerp(bands[band], mapped, smoothing);
+    }
+}
+//--------------------------------------------------------------
+void FftObject::process(ofSoundBuffer &input, ofSoundBuffer &output) {
+    
+    input.copyTo(output);//this sound object does not process sound so it will passthrough.
+    if (numChannels != input.getNumChannels() ) {
+        cout << "numChannels != input.getNumChannels()" << numChannels << " " << input.getNumChannels() << endl;
+        setBins( input.getNumChannels());
+    }
+    
+    if (input.getNumFrames() == bufferSize) {
+        if (input.getNumChannels() == 1) {
+            fft->setSignal(input.getBuffer());
+        }else{
+            for (int i =0; i < numChannels; i++) {
+                ofSoundBuffer b;
+                input.getChannel(b, i);
+                fft->setSignal(b.getBuffer());
+                float* curFft = fft->getAmplitude();
+                memcpy(&audioBins[i][0], curFft, sizeof(float) * fft->getBinSize());
+            }
+        }
+    }else{
+        cout << "input.getNumFrames() != bufferSize" << endl;
+    }
+    
+    soundMutex.lock();
+    middleBins = audioBins;
+    soundMutex.unlock();
+    bIsProcessed = true;
+}

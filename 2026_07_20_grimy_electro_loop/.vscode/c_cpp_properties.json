@@ -1,0 +1,82 @@
+{
+    "version": 4,
+    "configurations": [
+        {
+            "name": "Win32-oF-Debug-x64",
+            "includePath": [
+                "${workspaceFolder}/src",
+
+                "${workspaceFolder}/../../../libs/openFrameworks",
+                "${workspaceFolder}/../../../libs/openFrameworks/3d",
+                "${workspaceFolder}/../../../libs/openFrameworks/app",
+                "${workspaceFolder}/../../../libs/openFrameworks/communication",
+                "${workspaceFolder}/../../../libs/openFrameworks/events",
+                "${workspaceFolder}/../../../libs/openFrameworks/gl",
+                "${workspaceFolder}/../../../libs/openFrameworks/graphics",
+                "${workspaceFolder}/../../../libs/openFrameworks/math",
+                "${workspaceFolder}/../../../libs/openFrameworks/sound",
+                "${workspaceFolder}/../../../libs/openFrameworks/types",
+                "${workspaceFolder}/../../../libs/openFrameworks/utils",
+                "${workspaceFolder}/../../../libs/openFrameworks/video",
+
+                "${workspaceFolder}/../../../libs/glm/include",
+                "${workspaceFolder}/../../../libs/rtAudio/include",
+                "${workspaceFolder}/../../../libs/freetype/include",
+                "${workspaceFolder}/../../../libs/FreeImage/include",
+                "${workspaceFolder}/../../../libs/videoInput/include",
+                "${workspaceFolder}/../../../libs/glew/include",
+                "${workspaceFolder}/../../../libs/tess2/include",
+                "${workspaceFolder}/../../../libs/cairo/include",
+                "${workspaceFolder}/../../../libs/pixman/include",
+                "${workspaceFolder}/../../../libs/libpng/include",
+                "${workspaceFolder}/../../../libs/zlib/include",
+                "${workspaceFolder}/../../../libs/glfw/include",
+                "${workspaceFolder}/../../../libs/openssl/include",
+                "${workspaceFolder}/../../../libs/utf8/include",
+                "${workspaceFolder}/../../../libs/json/include",
+                "${workspaceFolder}/../../../libs/curl/include",
+                "${workspaceFolder}/../../../libs/uriparser/include",
+                "${workspaceFolder}/../../../libs/pugixml/include",
+                "${workspaceFolder}/../../../addons",
+
+                "${workspaceFolder}/../../../addons/ofxAudioFile/libs",
+                "${workspaceFolder}/../../../addons/ofxAudioFile/src",
+                "${workspaceFolder}/../../../addons/ofxFastFboReader/src",
+                "${workspaceFolder}/../../../addons/ofxFFmpegRecorder/libs",
+                "${workspaceFolder}/../../../addons/ofxFFmpegRecorder/libs/ffmpeg",
+                "${workspaceFolder}/../../../addons/ofxFFmpegRecorder/libs/ffmpeg/lib",
+                "${workspaceFolder}/../../../addons/ofxFFmpegRecorder/src",
+                "${workspaceFolder}/../../../addons/ofxFft/libs",
+                "${workspaceFolder}/../../../addons/ofxFft/libs/fftw",
+                "${workspaceFolder}/../../../addons/ofxFft/libs/fftw/include",
+                "${workspaceFolder}/../../../addons/ofxFft/libs/fftw/lib",
+                "${workspaceFolder}/../../../addons/ofxFft/libs/kiss",
+                "${workspaceFolder}/../../../addons/ofxFft/src",
+                "${workspaceFolder}/../../../addons/ofxGui/src",
+                "${workspaceFolder}/../../../addons/ofxSoundObjects/src",
+                "${workspaceFolder}/../../../addons/ofxSoundObjects/src/Renderers",
+                "${workspaceFolder}/../../../addons/ofxSoundObjects/src/SoundObjects"
+            ],
+            "defines": [
+                "WIN32",
+                "_DEBUG",
+                "_CONSOLE",
+                "POCO_STATIC",
+                "CAIRO_WIN32_STATIC_BUILD",
+                "DISABLE_SOME_FLOATING_POINT",
+                "CURL_STATICLIB",
+                "URI_STATIC_BUILD",
+                "GLM_FORCE_CTOR_INIT",
+                "GLM_ENABLE_EXPERIMENTAL",
+                "USING_OFX_SOUND_OBJECTS"
+            ],
+            "windowsSdkVersion": "10.0",
+            "compilerPath": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/MSVC/14.44.35207/bin/Hostx64/x64/cl.exe",
+            "compilerArgs": [
+                "/std:c++latest",
+                "/Zc:__cplusplus"
+            ],
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ]
+}
