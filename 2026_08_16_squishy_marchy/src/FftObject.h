@@ -23,7 +23,7 @@ public:
     // than the current one (fast, so hits stay snappy), `release` when it's
     // lower (slow, so decay looks smooth instead of jittery). Both are lerp
     // rates: 0 = frozen, 1 = instant.
-    void updateBands(std::vector<float>& bands, float sampleRate, float freqMin, float dbMin, float dbMax, float attack, float release);
+    void updateBands(std::vector<float>& bands, float sampleRate, float freqMin, float dbMin, float dbMax, const std::vector<float>& attacks, const std::vector<float>& releases);
 
     unsigned int bufferSize;
 

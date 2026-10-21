@@ -58,12 +58,12 @@ class ofApp : public ofBaseApp{
 		ofFbo lastFboOutput; // previous frame, for feedback/trail ping-pong
 		ofxFastFboReader fboReader;
 		ofxFFmpegRecorder recorder;
-		ofPixels recordPixels; // reused every frame by fboReader.readToPixels()
+		ofPixels recordPixels;// reused every frame by fboReader.readToPixels()
 
 		// Recording: writes a timestamped .mp4 to bin/data/ for the whole run
 		// when true. Off by default so dev iteration doesn't pile up
 		// recordings on disk -- flip to true when you actually want an export.
-		bool bRecordEnabled = false;
+		bool bRecordEnabled = true;
 		// The recorder is configured in setup() but not started there -- see
 		// update(), which starts it on the first frame fft.bIsProcessed goes
 		// true, so the video's first frame is in sync with the audio actually
@@ -80,7 +80,7 @@ class ofApp : public ofBaseApp{
 		// bin (diminishing returns) and, in sketches whose draw() cost scales
 		// with numBands (e.g. a numBands x numBands loop), frame cost can climb
 		// fast -- keep that in mind before raising this ceiling per-sketch.
-		int numBands = 20;
+		int numBands = 5;
 		int numBandsMin = 2;
 		int numBandsMax = 64;
 		float sampleRate = 44100.0f;
@@ -89,8 +89,10 @@ class ofApp : public ofBaseApp{
 		// hits stay snappy, slow decay when it falls (release) so the motion
 		// reads as smooth instead of jittery -- see FftObject::updateBands.
 		// 0 = frozen, 1 = instant.
-		float bandAttack = 1.0f;
-		float bandRelease = 0.01f;
+		// float bandAttack = 1.0f;
+		// float bandRelease = 0.005f;
+		std::vector<float> bandAttacks = std::vector<float>(numBands, 1.0f);
+		std::vector<float> bandReleases = std::vector<float>(numBands, 0.005f);
 		float dbMin = -90.0f;
 		float dbMax = 0.0f;
 		std::vector<float> bands;
@@ -106,17 +108,29 @@ class ofApp : public ofBaseApp{
 		// Doubles as a smoke test (nothing moving means the audio pipeline is
 		// broken upstream) and tells you the actual dynamic range of a given
 		// sample, so you know what values are worth designing around.
-		std::vector<float> bandMin, bandMax;
+		std::vector<float> bandMin = std::vector<float>(numBands, 1.0f);
+		std::vector<float> bandMax = std::vector<float>(numBands, 0.0f);
 		float lastStatsLogTime = 0.0f;
 		float statsLogInterval = 2.0f; // seconds between console summaries
 
 		// Draws each band's running max as text straight to the window (not
 		// into fboOutput), so it's visible live but never ends up baked into
 		// a recording. Toggle off if it's in the way.
-		bool bShowStatsOverlay = true;
+		bool bShowStatsOverlay = false;
 
 		// Feedback/trail: fraction of background color re-drawn over the previous
 		// frame each draw() call. 0 = trails never fade (garbage/full feedback),
 		// higher = trails fade faster / are shorter. Tune to taste.
-		float trailFadeAlpha = 1.00f;
+		float trailFadeAlpha = 0.01f;
+
+		ofPolyline myLine;
+
+		int freqX = 3;
+		int freqY = 4;
+		float resolution = 0.01f;
+		float band1threshold = 0.44f;
+	    float band3threshold = 0.5f;
+		float noiseScale = 0.3f;
+		int haloS = 115;
+		int haloA = 160;
 };

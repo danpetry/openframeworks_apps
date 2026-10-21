@@ -2,7 +2,7 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
-	ofSetBackgroundColor(ofColor::black);
+	ofSetBackgroundColor(2,7,6);
 	ofEnableAlphaBlending(); // needed for the trail-fade overlay in draw() below
 
 	// The default ESC-quits-app behavior routes through the same window-close
@@ -122,7 +122,7 @@ void ofApp::update(){
 		bRecordingStarted = true;
 	}
 
-	fft.updateBands(bands, sampleRate, freqMin, dbMin, dbMax, bandAttack, bandRelease);
+	fft.updateBands(bands, sampleRate, freqMin, dbMin, dbMax, bandAttacks, bandReleases);
 
 	// Force disabled bands to silence here, before anything downstream (bar
 	// chart, stats overlay, a derived sketch) reads bands[]. This also means
@@ -135,7 +135,10 @@ void ofApp::update(){
 	// Track each band's observed range and periodically print it, so you
 	// know the actual dynamic range of this sample before designing around it.
 	for (int i = 0; i < numBands; ++i) {
-		bandMin[i] = std::min(bandMin[i], bands[i]);
+		// Only update the min if the band is non-zero, so an initial silence doesn't make the min 0 and squash the range
+		if (bands[i] != 0) {
+			bandMin[i] = std::min(bandMin[i], bands[i]);
+		}
 		bandMax[i] = std::max(bandMax[i], bands[i]);
 	}
 
@@ -147,6 +150,33 @@ void ofApp::update(){
 		}
 		ofLogNotice("bands") << ss.str();
 	}
+
+	myLine.clear();
+
+	static float phase = 0;
+	phase += 0.01f;
+	int minX = fboWidth * 0.2f;
+	int maxX = fboWidth * 0.8f;
+	// int minY = fboHeight * 0.2f;
+	// int maxY = fboHeight * 0.8f;
+	int minY = ofMap(bands[1], bandMin[1] + (bandMax[1] - bandMin[1]) * band1threshold, bandMax[1], fboHeight * 0.3, fboHeight * 0.1f, true);
+	int maxY = ofMap(bands[1], bandMin[1] + (bandMax[1] - bandMin[1]) * band1threshold, bandMax[1], fboHeight * 0.7f, fboHeight * 0.9f, true);
+
+	float noiseAmount = ofMap(bands[3], bandMin[3]  + (bandMax[3] - bandMin[3]) * band3threshold, bandMax[3], 0, noiseScale, true);
+	bandReleases[3] = 0.1f; // band 3 is the one we control with mouse X
+
+	for (float i = 0; i <= 2 * PI + 0.19; i += 2 * PI * resolution) {
+			float x = ofMap(sin(4 * i + phase + ofRandom(-noiseAmount, noiseAmount)), -1, 1, minX, maxX);
+			float y = ofMap(sin(5 * i), -1, 1, minY, maxY);
+			myLine.curveTo(x, y);
+		}
+		//myLine.close();
+	// static int frameCount = 0;
+	// 	frameCount++;
+	// 	if (frameCount % 10 == 0) {
+
+	// 	myLine.curveTo(ofMap(bands[1], bandMin[1], bandMax[1], 0, fboWidth), ofMap(bands[3], bandMin[3], bandMax[3], 0, fboHeight));
+    // }
 }
 
 //--------------------------------------------------------------
@@ -170,19 +200,28 @@ void ofApp::draw(){
 	bg.a = trailFadeAlpha;
 	ofSetColor(bg);
 	ofDrawRectangle(0, 0, fboWidth, fboHeight);
-	ofSetColor(255); // reset to opaque white for your drawing code below
-
+	ofColor traceColor = ofColor::fromHsb(96, 140, 255, 255);
+	ofColor haloColor = ofColor::fromHsb(96, haloS, 255, haloA);
+	
+// for (int i = 0; i < numBands; i++) {
+// 		float barWidth = (float)fboWidth / numBands;
+// 		float barHeight = bands[i] * fboHeight;
+// 		ofSetColor(255 * bands[i]);
+// 		ofDrawRectangle(i * barWidth, fboHeight - barHeight, barWidth, barHeight);
+// 	}
 	// --- Your sketch goes here. ---------------------------------------------
-	// This bar chart is a minimal prototype -- read bands[] and draw something
-	// with it, however simple -- not a final look. Replace it once you know
-	// (from the console log in update()) what this sample's values actually do.
-	// `bands[i]` is a smoothed 0..1 amplitude for frequency band i (low -> high).
-	for (int i = 0; i < numBands; i++) {
-		float barWidth = (float)fboWidth / numBands;
-		float barHeight = bands[i] * fboHeight;
-		ofSetColor(255 * bands[i]);
-		ofDrawRectangle(i * barWidth, fboHeight - barHeight, barWidth, barHeight);
-	}
+	// use bands two and four of five ie bands[1] and bands[3]
+	//draw central line
+	
+
+	//draw a halo around the line
+	ofSetColor(haloColor);
+	ofSetLineWidth(10);
+	myLine.draw();
+	ofSetColor(traceColor); // reset to opaque white for your drawing code below
+	ofSetLineWidth(2);
+	myLine.draw();
+	
 	// -------------------------------------------------------------------------
 
 	// Finish drawing into current FBO
@@ -203,6 +242,11 @@ void ofApp::draw(){
 		ofSetColor(255);
 		ofDrawBitmapStringHighlight(ss.str(), 12, 20);
 	}
+	std::stringstream ss;
+	// ss << "haloS: " << haloS << "  (mouse X)\n";
+	// ss << "haloA: " << haloA << "  (mouse Y)\n";
+	ofSetColor(255);
+	ofDrawBitmapStringHighlight(ss.str(), 12, 80);
 
 	if (bRecordingStarted) {
 		// ofxFastFboReader used to speed this up; recordPixels is a persistent
@@ -280,6 +324,10 @@ void ofApp::keyReleased(int key){
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y ){
+	// haloS = ofMap(x, 0, ofGetHeight(), 0, 255, true);
+	// haloA = ofMap(y, 0, ofGetHeight(), 0, 255, true);
+	// bandReleases[3] = ofMap(x, 0, ofGetWidth(), 0.0f, 1.0f, true);
+	// band3threshold = ofMap(y, 0, ofGetHeight(), 0.0f, 1.0f, true);
 
 }
 

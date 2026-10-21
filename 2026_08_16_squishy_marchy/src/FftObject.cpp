@@ -84,7 +84,7 @@ float FftObject::getAmplitudeAtBin(const std::vector<float>& amplitude, float bi
     return ofMap(bin, lowBin, highBin, amplitude[lowBin], amplitude[highBin]);
 }
 //--------------------------------------------------------------
-void FftObject::updateBands(std::vector<float>& bands, float sampleRate, float freqMin, float dbMin, float dbMax, float attack, float release) {
+void FftObject::updateBands(std::vector<float>& bands, float sampleRate, float freqMin, float dbMin, float dbMax, const std::vector<float>& attacks, const std::vector<float>& releases) {
     if (!bIsProcessed || bands.empty()) return;
 
     // Snapshot under lock, same as draw() does, instead of reading the live
@@ -119,7 +119,7 @@ void FftObject::updateBands(std::vector<float>& bands, float sampleRate, float f
         float db = 20.0f * std::log10(amp);
         float mapped = ofClamp((db - dbMin) / (dbMax - dbMin), 0.0f, 1.0f);
 
-        float rate = (mapped > bands[band]) ? attack : release;
+        float rate = (mapped > bands[band]) ? attacks[band] : releases[band];
         bands[band] = ofLerp(bands[band], mapped, rate);
     }
 }
