@@ -5,7 +5,6 @@
             "name": "Win32-oF-Debug-x64",
             "includePath": [
                 "${workspaceFolder}/src",
-
                 "${workspaceFolder}/../../../libs/openFrameworks",
                 "${workspaceFolder}/../../../libs/openFrameworks/3d",
                 "${workspaceFolder}/../../../libs/openFrameworks/app",
@@ -18,7 +17,6 @@
                 "${workspaceFolder}/../../../libs/openFrameworks/types",
                 "${workspaceFolder}/../../../libs/openFrameworks/utils",
                 "${workspaceFolder}/../../../libs/openFrameworks/video",
-
                 "${workspaceFolder}/../../../libs/glm/include",
                 "${workspaceFolder}/../../../libs/rtAudio/include",
                 "${workspaceFolder}/../../../libs/freetype/include",
@@ -38,7 +36,6 @@
                 "${workspaceFolder}/../../../libs/uriparser/include",
                 "${workspaceFolder}/../../../libs/pugixml/include",
                 "${workspaceFolder}/../../../addons",
-
                 "${workspaceFolder}/../../../addons/ofxAudioFile/libs",
                 "${workspaceFolder}/../../../addons/ofxAudioFile/src",
                 "${workspaceFolder}/../../../addons/ofxFastFboReader/src",
@@ -77,6 +74,35 @@
                 "/Zc:__cplusplus"
             ],
             "intelliSenseMode": "windows-msvc-x64"
+        },
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/src",
+                "${workspaceFolder}/../../../libs/**",
+                "${workspaceFolder}/../../../addons/ofxAudioFile/**",
+                "${workspaceFolder}/../../../addons/ofxFastFboReader/**",
+                "${workspaceFolder}/../../../addons/ofxFFmpegRecorder/src",
+                "${workspaceFolder}/../../../addons/ofxFft/src",
+                "${workspaceFolder}/../../../addons/ofxFft/libs/kiss",
+                "${workspaceFolder}/../../../addons/ofxGui/src",
+                "${workspaceFolder}/../../../addons/ofxSoundObjects/src/**"
+            ],
+            "defines": [
+                "DEBUG",
+                "TARGET_OSX",
+                "__MACOSX_CORE__",
+                "USE_FMOD=0",
+                "GLM_FORCE_CTOR_INIT",
+                "GLM_ENABLE_EXPERIMENTAL",
+                "USING_OFX_SOUND_OBJECTS"
+            ],
+            "macFrameworkPath": [
+                "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+            ],
+            "compilerPath": "/usr/bin/clang++",
+            "cppStandard": "c++23",
+            "intelliSenseMode": "macos-clang-arm64"
         }
     ]
 }

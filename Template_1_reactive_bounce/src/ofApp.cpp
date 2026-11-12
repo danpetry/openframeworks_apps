@@ -19,8 +19,15 @@ void ofApp::setup(){
 	// which on this machine wakes third-party ASIO-hooked apps (e.g.
 	// Sonarworks) as a side effect. WASAPI is the standard low-latency
 	// Windows default and skips ASIO device enumeration entirely.
+#ifdef TARGET_WIN32
 	streamSettings.setApi(ofSoundDevice::MS_WASAPI);
 	streamSettings.numInputChannels = 2;
+#else
+	// Nothing reads the input side (only file playback is analysed), and
+	// asking for input channels on macOS triggers a microphone permission
+	// prompt, so open the stream output-only.
+	streamSettings.numInputChannels = 0;
+#endif
 	streamSettings.numOutputChannels = 2;
 	streamSettings.sampleRate = static_cast<size_t>(sampleRate);
 	streamSettings.bufferSize = bufferSize;
@@ -84,6 +91,11 @@ void ofApp::setup(){
 
 	if (bRecordEnabled) {
 		recorder.setup(true, false, glm::vec2(fboWidth, fboHeight));
+#ifdef TARGET_OSX
+		// Apps launched from Finder/VS Code don't inherit the shell's PATH,
+		// so the default bare "ffmpeg" wouldn't find Homebrew's install.
+		recorder.setFFmpegPath("/opt/homebrew/bin/ffmpeg");
+#endif
 		recorder.setOverWrite(true);
 		recorder.setInputPixelFormat(OF_IMAGE_COLOR);
 

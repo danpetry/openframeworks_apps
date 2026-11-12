@@ -6,42 +6,93 @@
             "type": "shell",
             "command": "powershell.exe",
             "args": [
-                "-ExecutionPolicy", "Bypass",
-                "-File", "${workspaceFolder}/../build.ps1",
-                "-Project", "${workspaceFolderBasename}",
-                "-Configuration", "Debug"
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/../build.ps1",
+                "-Project",
+                "${workspaceFolderBasename}",
+                "-Configuration",
+                "Debug"
             ],
-            "group": { "kind": "build", "isDefault": true },
-            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
-            "problemMatcher": "$msCompile"
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": "$msCompile",
+            "osx": {
+                "command": "${workspaceFolder}/../build.sh",
+                "args": [
+                    "${workspaceFolderBasename}",
+                    "Debug"
+                ],
+                "problemMatcher": "$gcc"
+            }
         },
         {
             "label": "Build Release",
             "type": "shell",
             "command": "powershell.exe",
             "args": [
-                "-ExecutionPolicy", "Bypass",
-                "-File", "${workspaceFolder}/../build.ps1",
-                "-Project", "${workspaceFolderBasename}",
-                "-Configuration", "Release"
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/../build.ps1",
+                "-Project",
+                "${workspaceFolderBasename}",
+                "-Configuration",
+                "Release"
             ],
             "group": "build",
-            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
-            "problemMatcher": "$msCompile"
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": "$msCompile",
+            "osx": {
+                "command": "${workspaceFolder}/../build.sh",
+                "args": [
+                    "${workspaceFolderBasename}",
+                    "Release"
+                ],
+                "problemMatcher": "$gcc"
+            }
         },
         {
             "label": "Clean",
             "type": "shell",
             "command": "powershell.exe",
             "args": [
-                "-ExecutionPolicy", "Bypass",
-                "-File", "${workspaceFolder}/../build.ps1",
-                "-Project", "${workspaceFolderBasename}",
-                "-Target", "clean"
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                "${workspaceFolder}/../build.ps1",
+                "-Project",
+                "${workspaceFolderBasename}",
+                "-Target",
+                "clean"
             ],
             "group": "build",
-            "presentation": { "reveal": "always", "panel": "shared", "clear": true },
-            "problemMatcher": []
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            },
+            "problemMatcher": [],
+            "osx": {
+                "command": "${workspaceFolder}/../build.sh",
+                "args": [
+                    "${workspaceFolderBasename}",
+                    "Debug",
+                    "clean"
+                ]
+            }
         }
     ]
 }

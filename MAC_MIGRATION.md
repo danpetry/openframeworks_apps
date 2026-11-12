@@ -4,6 +4,35 @@ Context captured on the Windows machine (2026-11-10) so the Mac can be set up
 quickly. Written for both Dan and Claude Code on the new machine: read this
 first, then work through the checklist.
 
+## Outcome on the Mac (2026-11-12)
+
+Done and verified on macOS 27 / Apple Silicon. Where reality differed from the plan below:
+
+- **No Xcode needed.** Only the command-line tools are installed; the oF `Makefile`
+  (`scripts/templates/osx/Makefile`, copied into the sketch) builds fine with them.
+  `projectGenerator` wasn't used.
+- **Only `Template_1_reactive_bounce` was ported.** The dated sketches are finished/posted
+  and stay Windows-only on purpose.
+- Addons cloned at the commits in section 2 (over https). The `ofxFFmpegRecorder` fork's
+  one commit (quote output path with spaces + log the ffmpeg command) is still relevant on Mac
+  since `popen` goes through `/bin/sh` there too, so it's kept.
+- Template `setup()` changes: `setApi(MS_WASAPI)` and `numInputChannels = 2` are now
+  `#ifdef TARGET_WIN32`; on other platforms the stream opens with 0 input channels (nothing
+  reads input, and requesting it would trigger the macOS mic-permission prompt).
+  `#ifdef TARGET_OSX` → `recorder.setFFmpegPath("/opt/homebrew/bin/ffmpeg")`.
+- Verified by a run with `2026_10_08_tranceysolo.wav`: band stats moving in the log, ffmpeg
+  keeping up at ~29fps realtime, output mp4 = h264 1080x1920 yuv420p 30fps, frames render
+  bars with trails. (ffmpeg warns "Multiple -pix_fmt options": harmless, the sketch's
+  `-pix_fmt yuv420p` wins.)
+- `build.sh` added (Mac counterpart of `build.ps1`). VS Code: `tasks.json` got `osx` overrides
+  calling it, `launch.json` got a "Build and launch (Debug, macOS)" config using cpptools'
+  lldb (`cppdbg`/`MIMode: lldb`, so CodeLLDB isn't needed), `c_cpp_properties.json` got a
+  `Mac` config. Windows variants kept. The Windows editor font/theme weren't carried over;
+  the Mac's editor setup comes from `~/Sandbox/devconfig`.
+- Root `CLAUDE.md` rewritten for Mac (canonical copy: `of-root-CLAUDE.md`).
+
+The rest of this doc is the original Windows-side snapshot, kept for reference.
+
 ## What lives where (Windows)
 
 ```

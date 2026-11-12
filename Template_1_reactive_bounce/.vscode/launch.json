@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Build and launch (Debug)",
+            "name": "Build and launch (Debug, Windows)",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/${workspaceFolderBasename}_debug.exe",
@@ -11,6 +11,19 @@
             "cwd": "${workspaceFolder}/bin",
             "environment": [],
             "console": "externalTerminal",
+            "preLaunchTask": "Build Debug"
+        },
+        {
+            "name": "Build and launch (Debug, macOS)",
+            "type": "cppdbg",
+            "request": "launch",
+            "MIMode": "lldb",
+            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}_debug.app/Contents/MacOS/${workspaceFolderBasename}_debug",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin",
+            "environment": [],
+            "externalConsole": false,
             "preLaunchTask": "Build Debug"
         }
     ]
