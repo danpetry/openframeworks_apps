@@ -1,0 +1,8 @@
+# Third-party openFrameworks addons, cloned into <oF root>/addons/ at these commits.
+# (ofxGui is stock oF and not listed.)
+# name               remote                                           commit
+ofxAudioFile         https://github.com/npisanti/ofxAudioFile         ec426c8a04d67a0ec7f2c4f5c3ff8c77b52f5e9d
+ofxFft               https://github.com/kylemcdonald/ofxFft           b5208b332efcb6172d19776f018468efaf9da8ea
+ofxSoundObjects      https://github.com/roymacdonald/ofxSoundObjects  6f78be34272e0f92ece905e5f1bcd67081ce7429
+ofxFastFboReader     https://github.com/satoruhiga/ofxFastFboReader   12b0069cc54d8496ada287c155018a771f7fc248
+ofxFFmpegRecorder    https://github.com/danpetry/ofxFFmpegRecorder    025f1d5b4f468ea06de8aad46dab89ae80c0d574  # fork, branch dpetry/handle-paths-with-spaces
