@@ -121,6 +121,8 @@ void ofApp::setup(){
 	}
 
 	// Other setup code can go here...
+
+	bSetupComplete = true; // keep last -- see the declaration in ofApp.h
 }
 
 //--------------------------------------------------------------
@@ -163,6 +165,7 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+	if (!bSetupComplete) return;
 
 	// Begin rendering into the "current" FBO
 	fboOutput.begin();

@@ -30,6 +30,12 @@ Done and verified on macOS 27 / Apple Silicon. Where reality differed from the p
   `Mac` config. Windows variants kept. The Windows editor font/theme weren't carried over;
   the Mac's editor setup comes from `~/Sandbox/devconfig`.
 - Root `CLAUDE.md` rewritten for Mac (canonical copy: `of-root-CLAUDE.md`).
+- Mac-only crash found afterwards: with `bShowFilePicker = true`, the macOS file dialog runs
+  a modal loop inside `setup()` that fires GLFW refresh callbacks, so `draw()` ran before
+  `bands` existed (segfault on `bands[i]`). Fixed with a `bSetupComplete` guard at the top of
+  `draw()`.
+- Debugging (F5 / `lldb`) crashed on load with the Command Line Tools' LLDB (lldb-1700) on
+  macOS 27; fix is updating to Command Line Tools for Xcode 27.2+ via Software Update.
 
 The rest of this doc is the original Windows-side snapshot, kept for reference.
 

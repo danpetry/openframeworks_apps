@@ -2,18 +2,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Build and launch (Debug, Windows)",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}_debug.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/bin",
-            "environment": [],
-            "console": "externalTerminal",
-            "preLaunchTask": "Build Debug"
-        },
-        {
             "name": "Build and launch (Debug, macOS)",
             "type": "cppdbg",
             "request": "launch",
@@ -24,6 +12,31 @@
             "cwd": "${workspaceFolder}/bin",
             "environment": [],
             "externalConsole": false,
+            "preLaunchTask": "Build Debug"
+        },
+        {
+            "name": "Build and launch (Release, macOS)",
+            "type": "cppdbg",
+            "request": "launch",
+            "MIMode": "lldb",
+            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}.app/Contents/MacOS/${workspaceFolderBasename}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin",
+            "environment": [],
+            "externalConsole": false,
+            "preLaunchTask": "Build Release"
+        },
+        {
+            "name": "Build and launch (Debug, Windows)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}_debug.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/bin",
+            "environment": [],
+            "console": "externalTerminal",
             "preLaunchTask": "Build Debug"
         }
     ]

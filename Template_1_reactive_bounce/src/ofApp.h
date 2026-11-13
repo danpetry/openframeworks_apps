@@ -51,6 +51,12 @@ class ofApp : public ofBaseApp{
 		// the dialog once if nothing's been remembered yet.
 		bool bShowFilePicker = true;
 
+		// Set as the last line of setup(). On macOS the file picker runs a
+		// modal loop inside setup() that keeps firing window-refresh
+		// callbacks, i.e. draw() runs before bands/FBOs exist; draw() bails
+		// out until this is true.
+		bool bSetupComplete = false;
+
 		// rendering
 		int fboWidth = 1080;
 		int fboHeight = 1920;
